@@ -3,6 +3,7 @@ package ms.Examen.Usuario.service;
 import ms.Examen.Usuario.entity.Usuario;
 import ms.Examen.Usuario.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -13,11 +14,15 @@ import java.util.Optional;
 public class UsuarioService {
     @Autowired
     private UsuarioRepository usuarioRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     public String login(String login, String password) {
         Usuario usuario = usuarioRepository.findByLogin(login);
+        String contraseniaencrptada=usuario.getPassword();
+        boolean coparacionContrasenias=passwordEncoder.matches(password,contraseniaencrptada);
         if (usuario != null) {
-            if (password.equals(usuario.getPassword())) {
+            if (coparacionContrasenias) {
                 if (usuario.getFechaVigencia() == null || !usuario.getFechaVigencia().before(new Date())) {
                     return "Bienvenido, " + usuario.getNombre() + "! \n" +
                             "Opciones:\n" +
@@ -34,11 +39,17 @@ public class UsuarioService {
         }
     }
 
-    public Usuario agregarUsuario(Usuario usuario) {
-        if (usuarioRepository.findByLogin(usuario.getLogin()) != null) {
-            throw new IllegalArgumentException("El usuario ya existe");
+    public String agregarUsuario(Usuario usuario) {
+        String password=usuario.getPassword();
+        String passwordEcriptado=passwordEncoder.encode(password);
+        usuario.setPassword(passwordEcriptado);
+        String login=usuario.getLogin();
+        if (usuarioRepository.findByLogin(login)==null){
+            usuarioRepository.save(usuario);
+        }else{
+            return "Usuario Existentente";
         }
-        return usuarioRepository.save(usuario);
+        return null;
     }
 
     public String eliminarUsuario(String login) {
@@ -52,6 +63,9 @@ public class UsuarioService {
     }
 
     public String modificarUsuario(Usuario usuario) {
+        String password=usuario.getPassword();
+        String passwordEcriptado=passwordEncoder.encode(password);
+        usuario.setPassword(passwordEcriptado);
         Optional<Usuario> usuarioExistente = usuarioRepository.findById(usuario.getLogin());
         if (usuarioExistente.isPresent()) {
 

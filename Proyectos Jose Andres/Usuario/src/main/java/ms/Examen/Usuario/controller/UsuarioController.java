@@ -20,8 +20,8 @@ public class UsuarioController {
         return usuarioService.login(login, password);
     }
     @PostMapping("/agregarUsuario")
-    public Usuario agregarUsuario(@RequestBody Usuario usuario){
-        return usuarioService.agregarUsuario(usuario);
+    public String agregarUsuario(@RequestBody Usuario usuario){
+         return usuarioService.agregarUsuario(usuario);
     }
     @DeleteMapping("/eliminar/{login}")
     public String eliminar(@PathVariable String login){
